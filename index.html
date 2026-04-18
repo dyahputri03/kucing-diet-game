@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kucing Diet by Dyah 😺🐀</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      transition: background 0.5s, color 0.5s;
+    }
+
+    /* Mode terang (default) */
+    body.light {
+      background: linear-gradient(to bottom, #fdf6e3, #cce7ff); /* krem → biru muda */
+      color: #333;
+    }
+    body.light h2 {
+      color: #444;
+      text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+    }
+    body.light .scoreboard {
+      color: #333;
+      text-shadow: 1px 1px 3px rgba(255,255,255,0.6);
+    }
+    body.light .instructions {
+      color: #222;
+      text-shadow: 1px 1px 3px rgba(255,255,255,0.6);
+    }
+    body.light canvas {
+      background: linear-gradient(to top, #e6ffe6 30%, #ffffff 100%);
+      border: 3px solid #aaa;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Mode gelap */
+    body.dark {
+      background: linear-gradient(to bottom, #1e1e2f, #2b2b3c); /* abu gelap → biru gelap */
+      color: #eee;
+    }
+    body.dark h2 {
+      color: #ffeb3b;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+    }
+    body.dark .scoreboard {
+      color: #ffcc80;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+    }
+    body.dark .instructions {
+      color: #ddd;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+    }
+    body.dark canvas {
+      background: linear-gradient(to top, #333 30%, #444 100%);
+      border: 3px solid #666;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+    body.dark .reward-message {
+      color: #ffd700; /* emas terang */
+      text-shadow: 0 0 8px #000;
+    }
+
+    h2 {
+      margin: 20px 0 10px;
+      font-size: 32px;
+    }
+    canvas {
+      border-radius: 14px;
+      max-width: 90%;
+      height: auto;
+      display: block;
+      margin: 10px auto;
+      transition: background 0.5s, border 0.5s;
+    }
+    .scoreboard {
+      font-size: 20px;
+      font-weight: bold;
+      font-family: "Comic Sans MS", cursive;
+    }
+    .instructions {
+      margin-top: 8px;
+      font-size: 16px;
+      font-style: italic;
+    }
+    .toggle-btn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .reward-message {
+      margin-top: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #d35400;
+      text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .reward-message.show {
+      opacity: 1;
+    }
+
+    /* Animasi untuk light mode */
+    body.light .reward-message.show {
+      animation: glow 1.5s infinite alternate;
+    }
+
+    /* Animasi untuk dark mode */
+    body.dark .reward-message.show {
+      animation: glowDark 1.5s infinite alternate;
+    }
+
+    @keyframes glow {
+      0% { color: #d35400; text-shadow: 0 0 5px #fff, 0 0 10px #ff9; }
+      50% { color: #e67e22; text-shadow: 0 0 15px #ffd700, 0 0 25px #ff9; }
+      100% { color: #d35400; text-shadow: 0 0 5px #fff, 0 0 10px #ff9; }
+    }
+
+    @keyframes glowDark {
+      0% { color: #fff; text-shadow: 0 0 5px #000, 0 0 10px #ff9; }
+      50% { color: #ffd700; text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9; }
+      100% { color: #fff; text-shadow: 0 0 5px #000, 0 0 10px #ff9; }
+    }
+  </style>
+</head>
+<body class="light">
+  <h2>✨ Kucing Diet by Dyah 😺🐀 ✨</h2>
+  <button class="toggle-btn" onclick="toggleMode()">🌙/☀️ Mode</button>
+  <canvas id="gameCanvas" width="600" height="220"></canvas>
+  <div class="scoreboard" id="scoreBoard">Tikus terlewati: 0</div>
+  <!-- Instruksi diperbarui agar sesuai HP -->
+  <div class="instructions">Tekan <b>Spasi</b> atau <b>tap layar</b> untuk lompat menghindari 🐀 agar diet si 😺 berhasil!</div>
+  <div class="reward-message" id="rewardMessage"></div>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreBoard = document.getElementById("scoreBoard");
+    const rewardMessage = document.getElementById("rewardMessage");
+
+    let cat, obstacles, yarns, score, gameOver;
+    let speed = 5;
+    let spawnInterval = 2000;
+    let lastSpawn = Date.now();
+    let bonusMessage = "";
+    let bonusTimer = 0;
+    let rewardShown = false;
+
+    function resetGame() {
+      cat = { x: 50, y: canvas.height - 50, width: 40, height: 40, dy: 0, jumping: false };
+      obstacles = [];
+      yarns = [];
+      score = 0;
+      gameOver = false;
+      lastSpawn = Date.now();
+      bonusMessage = "";
+      bonusTimer = 0;
+      rewardShown = false;
+      rewardMessage.textContent = "";
+      rewardMessage.classList.remove("show");
+    }
+
+    function drawCat() {
+      ctx.font = "36px Segoe UI Emoji";
+      ctx.fillText("😺", cat.x, cat.y);
+    }
+
+    function drawObstacles() {
+      ctx.font = "32px Segoe UI Emoji";
+      obstacles.forEach(o => ctx.fillText("🐀", o.x, o.y));
+    }
+
+    function drawYarns() {
+      ctx.font = "34px Segoe UI Emoji";
+      yarns.forEach(y => ctx.fillText("🧶", y.x, y.y));
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!gameOver) {
+        if (cat.jumping) {
+          cat.y += cat.dy;
+          cat.dy += 0.8;
+          if (cat.y >= canvas.height - 50) {
+            cat.y = canvas.height - 50;
+            cat.jumping = false;
+            cat.dy = 0;
+          }
+        }
+
+        obstacles.forEach(o => o.x -= speed);
+        if (obstacles.length && obstacles[0].x < -50) {
+          obstacles.shift();
+          score++;
+        }
+
+        yarns.forEach(y => y.x -= speed);
+        if (yarns.length && yarns[0].x < -50) yarns.shift();
+
+        obstacles.forEach(o => {
+          if (cat.x < o.x + 30 &&
+              cat.x + cat.width > o.x &&
+              cat.y < o.y + 30 &&
+              cat.y + cat.height > o.y) {
+            gameOver = true;
+            saveHighScore();
+          }
+        });
+
+        yarns.forEach((y, idx) => {
+          if (cat.x < y.x + 30 &&
+              cat.x + cat.width > y.x &&
+              cat.y < y.y + 30 &&
+              cat.y + cat.height > y.y) {
+            score += 3;
+            bonusMessage = "+3 poin dari 🧶!";
+            bonusTimer = 60;
+            yarns.splice(idx, 1);
+          }
+        });
+
+        drawCat();
+        drawObstacles();
+        drawYarns();
+
+        if (bonusTimer > 0) {
+          ctx.fillStyle = "green";
+          ctx.font = "18px Comic Sans MS";
+          ctx.textAlign = "center";
+          ctx.globalAlpha = bonusTimer / 60;
+          ctx.fillText(bonusMessage, canvas.width/2, 40);
+          ctx.globalAlpha = 1;
+          bonusTimer--;
+        }
+
+        scoreBoard.textContent = "Tikus terlewati: " + score;
+
+        // 🎉 Reward muncul saat skor 50
+        if (score >= 5 && !rewardShown) {
+          rewardMessage.textContent = "🎉 Got reward! Chat Dyah for klaim now, sertakan SS buktinya 🎉";
+          rewardMessage.classList.add("show");
+          rewardShown = true;
+        }
+
+        if (Date.now() - lastSpawn > spawnInterval) {
+          spawnObstacle();
+          if (Math.random() < 0.3) spawnYarn();
+          lastSpawn = Date.now();
+        }
+
+      } else {
+        ctx.fillStyle = "#d33";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.font = "26px Comic Sans MS";
+        ctx.fillText("Oops! Diet gagal 😿", canvas.width/2, canvas.height/2 - 20);
+
+        ctx.font = "18px Comic Sans MS";
+        ctx.fillText("Skor Tertinggi: " + getHighScore(), canvas.width/2, canvas.height/2 + 10);
+
+        ctx.font = "16px Comic Sans MS";
+        ctx.fillText("Tekan Enter atau tap layar untuk restart", canvas.width/2, canvas.height/2 + 40);
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function spawnObstacle() {
+      if (!gameOver) {
+        obstacles.push({ x: canvas.width, y: canvas.height - 50 });
+      }
+    }
+
+    function spawnYarn() {
+      if (!gameOver) {
+        yarns.push({ x: canvas.width, y: canvas.height - 80 });
+      }
+    }
+
+    function saveHighScore() {
+      let high = localStorage.getItem("highScore") || 0;
+      if (score > high) {
+        localStorage.setItem("highScore", score);
+      }
+    }
+
+    function getHighScore() {
+      return localStorage.getItem("highScore") || 0;
+    }
+
+    // Keyboard controls
+    document.body.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "PageUp") {
+        if (!cat.jumping && !gameOver) {
+          cat.jumping = true;
+          cat.dy = -12;
+        }
+      }
+      if (e.code === "Enter" && gameOver) {
+        resetGame();
+      }
+    });
+
+    // Tap layar (HP) atau klik canvas
+    canvas.addEventListener("touchstart", () => {
+      if (!cat.jumping && !gameOver) {
+        cat.jumping = true;
+        cat.dy = -12;
+      }
+      if (gameOver) resetGame();
+    });
+
+    canvas.addEventListener("click", () => {
+      if (!cat.jumping && !gameOver) {
+        cat.jumping = true;
+        cat.dy = -12;
+      }
+      if (gameOver) resetGame();
+    });
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
+      document.body.classList.toggle("dark");
+    }
+
+    resetGame();
+    update();
+  </script>
+</body>
+</html>
