@@ -309,15 +309,26 @@ ctx.fillText("Tekan Enter atau tap layar untuk mulai ulang", canvas.width/2, can
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
         e.preventDefault();
-        jump();
+        if (!gameOver) {
+          jump();
+        }
+      } else if (e.code === "Enter" && gameOver) {
+        // restart dengan Enter
+        resetGame();
       } else if (e.code === "KeyR" && gameOver) {
+        // restart dengan R (opsional)
         resetGame();
       }
     });
 
     canvas.addEventListener("touchstart", e => {
       e.preventDefault();
-      jump();
+      if (!gameOver) {
+        jump();
+      } else {
+        // restart dengan tap layar
+        resetGame();
+      }
     });
 
     resetGame();
