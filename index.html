@@ -154,7 +154,12 @@
 
     const catImage = new Image();
     catImage.src = "cat-sprite.png";
-    
+
+    catImage.onload = () => {
+      resetGame();
+      update();
+    };
+
     const frameWidth = 128;
     const frameHeight = 128;
     let frameX = 0;
