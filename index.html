@@ -152,22 +152,8 @@
     let bonusTimer = 0;
     let rewardShown = false;
 
-    const catImage = new Image();
-    catImage.src = "cat-sprite.png";
-
-    catImage.onload = () => {
-      resetGame();
-      update();
-    };
-
-    const frameWidth = 128;
-    const frameHeight = 128;
-    let frameX = 0;
-    let frameY = 0;
-    let frameTimer = 0;
-
     function resetGame() {
-      cat = { x: 50, y: canvas.height - frameHeight, width: frameWidth, height: frameHeight, dy: 0, jumping: false };
+      cat = { x: 50, y: canvas.height - 50, width: 40, height: 40, dy: 0, jumping: false };
       obstacles = [];
       yarns = [];
       score = 0;
@@ -180,16 +166,9 @@
       rewardMessage.classList.remove("show");
     }
 
-    // function drawCat() {
-    //   ctx.font = "36px 'Segoe UI Emoji'";
-    //   ctx.fillText("🐱", cat.x, cat.y);
-    // }
     function drawCat() {
-      ctx.drawImage(
-        catImage,
-        frameX * frameWidth, frameY * frameHeight, frameWidth, frameHeight,
-        cat.x, cat.y - frameHeight, frameWidth, frameHeight
-      );
+      ctx.font = "36px 'Segoe UI Emoji'";
+      ctx.fillText("🐱", cat.x, cat.y);
     }
 
     function drawObstacles() {
@@ -204,52 +183,27 @@
 
     function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
       if (!gameOver) {
-        // Gerakan lompat
         if (cat.jumping) {
           cat.y += cat.dy;
           cat.dy += 0.8;
-    
-          if (cat.dy < 0) {
-            // Saat naik → Jump Up
-            frameY = 0; 
-            frameX = 3; 
-          } else {
-            // Saat turun → Jump Down
-            frameY = 1; 
-            frameX = 0; 
-          }
-    
-          // Mendarat
-          if (cat.y >= canvas.height - frameHeight) {
-            cat.y = canvas.height - frameHeight;
+          if (cat.y >= canvas.height - 50) {
+            cat.y = canvas.height - 50;
             cat.jumping = false;
             cat.dy = 0;
-            frameY = 0; // kembali ke baris Run
-            frameX = 0; // mulai dari Run Frame 1
-          }
-        } else {
-          // Animasi lari saat tidak lompat
-          frameTimer++;
-          if (frameTimer % 10 === 0) {
-            frameX = (frameX + 1) % 2; // bergantian Run Frame 1 & 2
-            frameY = 0; // baris Run
           }
         }
-    
-        // Gerakan obstacle
+
         obstacles.forEach(o => o.x -= speed);
         if (obstacles.length && obstacles[0].x < -50) {
           obstacles.shift();
           score++;
         }
-    
-        // Gerakan yarn
+
         yarns.forEach(y => y.x -= speed);
         if (yarns.length && yarns[0].x < -50) yarns.shift();
-    
-        // Cek tabrakan
+
         obstacles.forEach(o => {
           if (cat.x < o.x + 30 &&
               cat.x + cat.width > o.x &&
@@ -259,7 +213,7 @@
             saveHighScore();
           }
         });
-    
+
         yarns.forEach((y, idx) => {
           if (cat.x < y.x + 30 &&
               cat.x + cat.width > y.x &&
@@ -271,13 +225,11 @@
             yarns.splice(idx, 1);
           }
         });
-    
-        // Gambar semua elemen
+
         drawCat();
         drawObstacles();
         drawYarns();
-    
-        // Bonus message
+
         if (bonusTimer > 0) {
           ctx.fillStyle = "green";
           ctx.font = "18px 'Poppins'";
@@ -287,35 +239,34 @@
           ctx.globalAlpha = 1;
           bonusTimer--;
         }
-    
-        // Update skor
+
         scoreBoard.textContent = "Tikus terlewati: " + score;
-    
-        // Reward message
+
         if (score >= 50 && !rewardShown) {
           rewardMessage.textContent = "🎉 Got reward! Chat Dyah for klaim now, sertakan SS buktinya 🎉";
           rewardMessage.classList.add("show");
           rewardShown = true;
         }
-    
-        // Spawn obstacle & yarn
+
         if (Date.now() - lastSpawn > spawnInterval) {
           spawnObstacle();
           if (Math.random() < 0.3) spawnYarn();
           lastSpawn = Date.now();
         }
       } else {
-        // Tampilan game over
-        ctx.fillStyle = "#e74c3c";
-        ctx.font = "28px 'Poppins', sans-serif";
+        ctx.fillStyle = "#888";
+        ctx.font = "24px 'Poppins'";
         ctx.textAlign = "center";
         const highScore = localStorage.getItem("kucingDietHighScore") || 0;
-        ctx.fillText("Oops! Diet gagal 😿", canvas.width/2, canvas.height/2 - 40);
-        ctx.fillText(`Skor Tertinggi: ${highScore}`, canvas.width/2, canvas.height/2);
-        ctx.font = "20px 'Poppins', sans-serif";
-        ctx.fillText("Tekan Enter atau tap layar untuk mulai ulang", canvas.width/2, canvas.height/2 + 40);
+ctx.fillStyle = "#e74c3c";
+ctx.font = "28px 'Poppins', sans-serif";
+ctx.textAlign = "center";
+ctx.fillText("Oops! Diet gagal 😿", canvas.width/2, canvas.height/2 - 40);
+ctx.fillText(`Skor Tertinggi: ${highScore}`, canvas.width/2, canvas.height/2);
+ctx.font = "20px 'Poppins', sans-serif";
+ctx.fillText("Tekan Enter atau tap layar untuk mulai ulang", canvas.width/2, canvas.height/2 + 40);
       }
-    
+
       requestAnimationFrame(update);
     }
 
@@ -333,8 +284,6 @@
       if (!cat.jumping) {
         cat.jumping = true;
         cat.dy = -12;
-        frameY = 0; 
-        frameX = 3; 
       }
     }
 
